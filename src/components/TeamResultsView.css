@@ -1,0 +1,9 @@
+.result-team-name-static {
+  flex: 1;
+  font-weight: 800;
+}
+
+.result-member-row.is-me {
+  color: var(--gold);
+  font-weight: 800;
+}

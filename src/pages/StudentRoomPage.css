@@ -1,0 +1,11 @@
+.student-room {
+  gap: 18px;
+}
+
+.student-room-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 700;
+  color: var(--muted);
+}

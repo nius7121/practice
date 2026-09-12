@@ -1,0 +1,198 @@
+.teacher-room {
+  gap: 20px;
+}
+
+.teacher-room-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.teacher-room-name {
+  font-size: 1.3rem;
+  font-weight: 900;
+}
+
+.teacher-room-meta {
+  color: var(--muted);
+  font-size: 0.88rem;
+  margin-top: 4px;
+}
+
+.room-code-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 210, 63, 0.1);
+  border: 1px solid rgba(255, 210, 63, 0.4);
+  border-radius: 14px;
+  padding: 10px 16px;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.room-code-label {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.room-code-value {
+  font-size: 1.4rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  color: var(--gold);
+}
+
+.room-code-copy {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.teacher-viewer-notice {
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: rgba(154, 160, 195, 0.12);
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.teacher-danger-zone {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.section-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.participant-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.participant-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.participant-name {
+  flex: 1;
+  font-weight: 600;
+}
+
+.participant-tag {
+  font-size: 0.78rem;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(255, 210, 63, 0.15);
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.captain-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.progress-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.progress-pill.is-ready {
+  color: var(--green);
+  background: rgba(61, 220, 151, 0.12);
+}
+
+.empty-note {
+  color: var(--muted);
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 20px 0;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+}
+
+.result-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.result-team-card {
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--team-color, var(--gold));
+  border-radius: 16px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.result-team-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.result-team-name-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px dashed transparent;
+  color: var(--text);
+  font-weight: 800;
+  font-size: 1rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.result-team-name-input:hover,
+.result-team-name-input:focus {
+  border-bottom-color: var(--muted);
+  outline: none;
+}
+
+.result-member-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 0.92rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.result-member-row:first-of-type {
+  border-top: none;
+}
+
+.overflow-panel {
+  border: 1px solid rgba(255, 159, 67, 0.4);
+  background: rgba(255, 159, 67, 0.08);
+  border-radius: 14px;
+  padding: 16px;
+}

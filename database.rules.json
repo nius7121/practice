@@ -1,0 +1,10 @@
+{
+  "rules": {
+    "rooms": {
+      ".read": true,
+      "$roomId": {
+        ".write": true
+      }
+    }
+  }
+}
