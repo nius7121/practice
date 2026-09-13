@@ -1,9 +1,10 @@
 {
   "rules": {
     "rooms": {
-      ".read": true,
       "$roomId": {
-        ".write": true
+        ".read": true,
+        ".write": true,
+        ".validate": "newData.hasChildren(['status'])"
       }
     }
   }
