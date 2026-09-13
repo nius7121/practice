@@ -4,10 +4,37 @@ import { playDrumroll, playFanfare, playReveal, playTick } from '../lib/sound'
 import { duckBgmForReveal, restoreBgmAfterReveal } from '../lib/bgm'
 import './RevealStage.css'
 
-const TICK_COUNT = 14
-const TICK_INTERVAL_MS = 110
-const TIE_LANDED_HOLD_MS = 1100
 const PICK_HOLD_MS = 1300
+const CARD_FACEDOWN_HOLD_MS = 650
+const CARD_REVEAL_STAGGER_MS = 500
+const CARD_RESULT_HOLD_MS = 1300
+
+/** 문자열을 안정적인 정수로 바꾼다 (동점 카드 숫자를 모든 화면에서 똑같이 만들기 위한 시드용). */
+function hashSeed(str) {
+  let h = 0
+  for (let i = 0; i < str.length; i++) {
+    h = (h * 31 + str.charCodeAt(i)) >>> 0
+  }
+  return h
+}
+
+/**
+ * 동점 후보들에게 하이로우 카드 숫자(2~10)를 나눠준다. 이미 정해진 승자가 항상 가장 높은
+ * 숫자를 뽑도록 만들어서, "카드 뽑기" 연출과 실제 결과가 절대 어긋나지 않게 한다.
+ * 같은 item에 대해 어느 화면에서 계산하든 항상 같은 숫자가 나온다(순수 함수).
+ */
+function buildTieCards(item) {
+  const candidates = item.tiedCandidates
+  const values = candidates.map((c) => 2 + (hashSeed(`${item.order}:${c.studentId}:${c.captainId}`) % 9))
+  const winnerIndex = candidates.findIndex(
+    (c) => c.studentId === item.studentId && c.captainId === item.captainId
+  )
+  if (winnerIndex >= 0) {
+    const maxOther = Math.max(0, ...values.filter((_, i) => i !== winnerIndex))
+    values[winnerIndex] = Math.min(13, maxOther + 1)
+  }
+  return candidates.map((c, i) => ({ ...c, cardValue: values[i] }))
+}
 
 /**
  * 코인 드래프트 발표 애니메이션.
@@ -62,7 +89,6 @@ export default function RevealStage({
     if (!item) return
     processingRef.current = true
 
-    let intervalId = null
     let timeoutId = null
 
     const finish = () => {
@@ -76,20 +102,23 @@ export default function RevealStage({
     }
 
     if (item.tie && item.tiedCandidates?.length > 1) {
-      let tick = 0
-      playDrumroll(Math.min(1.2, (TICK_COUNT * TICK_INTERVAL_MS) / 1000))
-      intervalId = setInterval(() => {
-        const candidate = item.tiedCandidates[tick % item.tiedCandidates.length]
-        setSpotlight({ item, phase: 'ticking', candidate })
+      const cards = buildTieCards(item)
+      setSpotlight({ item, phase: 'cards', cards, revealedCount: 0 })
+      playDrumroll(0.55)
+      timeoutId = setTimeout(function revealNext(revealedCount = 0) {
+        const nextCount = revealedCount + 1
         playTick()
-        tick += 1
-        if (tick >= TICK_COUNT) {
-          clearInterval(intervalId)
-          setSpotlight({ item, phase: 'landed' })
-          playReveal()
-          timeoutId = setTimeout(finish, TIE_LANDED_HOLD_MS)
+        setSpotlight({ item, phase: 'cards', cards, revealedCount: nextCount })
+        if (nextCount < cards.length) {
+          timeoutId = setTimeout(() => revealNext(nextCount), CARD_REVEAL_STAGGER_MS)
+        } else {
+          timeoutId = setTimeout(() => {
+            setSpotlight({ item, phase: 'landed' })
+            playReveal()
+            timeoutId = setTimeout(finish, PICK_HOLD_MS)
+          }, CARD_RESULT_HOLD_MS)
         }
-      }, TICK_INTERVAL_MS)
+      }, CARD_FACEDOWN_HOLD_MS)
     } else {
       setSpotlight({ item, phase: 'landed' })
       playReveal()
@@ -97,7 +126,6 @@ export default function RevealStage({
     }
 
     return () => {
-      if (intervalId) clearInterval(intervalId)
       if (timeoutId) clearTimeout(timeoutId)
     }
   }, [revealIndex, settledCount, sequence, total, myStudentId])
@@ -219,17 +247,9 @@ export default function RevealStage({
 }
 
 function SpotlightCard({ spotlight, captainById, nameOf }) {
-  const { item, phase, candidate } = spotlight
-  if (phase === 'ticking') {
-    const captain = captainById[candidate.captainId]
-    return (
-      <div className="spotlight-card is-ticking" style={{ '--team-color': captain?.color }}>
-        <div className="spotlight-badge">동점 추첨 중...</div>
-        <div className="spotlight-name">{nameOf(candidate.studentId)}</div>
-        <div className="spotlight-arrow">→</div>
-        <div className="spotlight-team">{captain?.teamName || `${captain?.name} 팀`}</div>
-      </div>
-    )
+  const { item, phase } = spotlight
+  if (phase === 'cards') {
+    return <TieCardDraw item={item} cards={spotlight.cards} revealedCount={spotlight.revealedCount} captainById={captainById} nameOf={nameOf} />
   }
   const captain = captainById[item.captainId]
   return (
@@ -239,6 +259,38 @@ function SpotlightCard({ spotlight, captainById, nameOf }) {
       <div className="spotlight-arrow">→</div>
       <div className="spotlight-team">{captain?.teamName || `${captain?.name} 팀`}</div>
       <div className="spotlight-amount">{item.amount} 코인</div>
+    </div>
+  )
+}
+
+/** 동점자들이 하이로우 카드를 한 장씩 뒤집어서, 더 높은 숫자가 나온 학생이 뽑히는 미니게임 연출. */
+function TieCardDraw({ item, cards, revealedCount, captainById, nameOf }) {
+  const allRevealed = revealedCount >= cards.length
+
+  return (
+    <div className="card-draw">
+      <div className="spotlight-badge">🃏 동점! 하이로우 카드 뽑기</div>
+      <div className="card-draw-row">
+        {cards.map((c, i) => {
+          const captain = captainById[c.captainId]
+          const isFlipped = i < revealedCount
+          const isWinner =
+            allRevealed && c.studentId === item.studentId && c.captainId === item.captainId
+          return (
+            <div
+              key={`${c.studentId}-${c.captainId}`}
+              className={`draw-card ${isFlipped ? 'is-flipped' : ''} ${isWinner ? 'is-winner' : ''}`}
+              style={{ '--team-color': captain?.color }}
+            >
+              <div className="draw-card-inner">
+                <div className="draw-card-face draw-card-back">🂠</div>
+                <div className="draw-card-face draw-card-front">{c.cardValue}</div>
+              </div>
+              <div className="draw-card-name">{nameOf(c.studentId)}</div>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }

@@ -7,6 +7,7 @@ import { buildTeamColorMap } from '../lib/teamColor'
 import CoinAllocator from '../components/CoinAllocator'
 import RevealStage from '../components/RevealStage'
 import TeamResultsView from '../components/TeamResultsView'
+import TeamCoinGauge from '../components/TeamCoinGauge'
 import { primeAudio } from '../lib/sound'
 import './StudentRoomPage.css'
 
@@ -49,16 +50,38 @@ export default function StudentRoomPage() {
       </div>
 
       {room.status === 'lobby' && (
-        <div className="card stack" style={{ textAlign: 'center' }}>
-          {member.isCaptain ? (
-            <>
-              <div style={{ fontSize: '2.4rem' }}>👑</div>
-              <p>당신은 이번 드래프트의 주장으로 지정되었어요!</p>
-              <p className="page-subtitle">선생님이 시작하면 다른 학생들이 코인을 걸기 시작해요.</p>
-            </>
-          ) : (
-            <p className="page-subtitle">선생님이 시작할 때까지 잠시만 기다려주세요.</p>
-          )}
+        <div className="stack">
+          <div className="card stack" style={{ textAlign: 'center' }}>
+            {member.isCaptain ? (
+              <>
+                <div style={{ fontSize: '2.4rem' }}>👑</div>
+                <p>당신은 이번 드래프트의 주장으로 지정되었어요!</p>
+                <p className="page-subtitle">선생님이 시작하면 다른 학생들이 코인을 걸기 시작해요.</p>
+              </>
+            ) : (
+              <p className="page-subtitle">선생님이 시작할 때까지 잠시만 기다려주세요.</p>
+            )}
+          </div>
+
+          <div className="card stack">
+            <div className="spread">
+              <span className="section-title">대기실 현황</span>
+              <span className="progress-pill">총 {captains.length + students.length}명 입장</span>
+            </div>
+            {captains.length === 0 ? (
+              <p className="page-subtitle" style={{ textAlign: 'center' }}>
+                아직 지정된 주장이 없어요.
+              </p>
+            ) : (
+              <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
+                {captains.map((c) => (
+                  <span key={c.id} className="participant-tag">
+                    👑 {c.name}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -68,6 +91,7 @@ export default function StudentRoomPage() {
             <div style={{ fontSize: '2.4rem' }}>👑</div>
             <p>지금 다른 학생들이 당신에게 코인을 걸고 있어요.</p>
             <p className="page-subtitle">누가 얼마나 걸었는지는 발표 시간에 공개돼요. 기대해주세요!</p>
+            <TeamCoinGauge captains={captainsWithColor} students={students} />
           </div>
         ) : (
           <BiddingForm

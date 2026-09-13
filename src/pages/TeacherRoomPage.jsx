@@ -81,16 +81,28 @@ export default function TeacherRoomPage() {
       )}
 
       {room.status === 'lobby' && (
-        <LobbyPanel room={room} roomId={roomId} captains={captains} students={students} readOnly={!isOwner} />
+        <LobbyPanel
+          room={room}
+          roomId={roomId}
+          captains={captainsWithColor}
+          students={students}
+          readOnly={!isOwner}
+        />
       )}
       {room.status === 'bidding' && (
-        <BiddingPanel roomId={roomId} captains={captains} students={students} readOnly={!isOwner} />
+        <BiddingPanel roomId={roomId} captains={captainsWithColor} students={students} readOnly={!isOwner} />
       )}
       {room.status === 'revealing' && (
         <RevealPanel room={room} roomId={roomId} captains={captainsWithColor} students={students} readOnly={!isOwner} />
       )}
       {room.status === 'done' && (
-        <DonePanel roomId={roomId} captains={captainsWithColor} students={students} readOnly={!isOwner} />
+        <DonePanel
+          roomId={roomId}
+          roomName={room.name}
+          captains={captainsWithColor}
+          students={students}
+          readOnly={!isOwner}
+        />
       )}
 
       {isOwner && (

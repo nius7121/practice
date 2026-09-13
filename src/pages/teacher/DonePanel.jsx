@@ -1,8 +1,11 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { manualAssign, setTeamName, updateRoomSettings } from '../../services/roomService'
+import { exportResultsAsCsv, exportElementAsImage } from '../../lib/exportResults'
 
-export default function DonePanel({ roomId, captains, students, readOnly }) {
+export default function DonePanel({ roomId, roomName, captains, students, readOnly }) {
   const [replaying, setReplaying] = useState(false)
+  const [exportingImage, setExportingImage] = useState(false)
+  const resultGridRef = useRef(null)
 
   const membersByCaptain = {}
   captains.forEach((c) => {
@@ -22,15 +25,43 @@ export default function DonePanel({ roomId, captains, students, readOnly }) {
     await updateRoomSettings(roomId, { status: 'revealing', revealIndex: 0 })
   }
 
+  function handleExportCsv() {
+    const teams = captains.map((captain) => ({
+      teamName: captain.teamName || `${captain.name} 팀`,
+      members: [{ name: captain.name, isCaptain: true }, ...membersByCaptain[captain.id].map((m) => ({ name: m.name, isCaptain: false }))],
+    }))
+    exportResultsAsCsv(roomName, teams)
+  }
+
+  async function handleExportImage() {
+    if (!resultGridRef.current) return
+    setExportingImage(true)
+    try {
+      await exportElementAsImage(resultGridRef.current, roomName)
+    } catch {
+      window.alert('이미지를 만들지 못했어요. 다시 시도해주세요.')
+    } finally {
+      setExportingImage(false)
+    }
+  }
+
   return (
     <div className="stack">
       <div className="spread">
         <span className="section-title">🏆 최종 팀 구성</span>
-        {!readOnly && (
-          <button type="button" className="ghost-btn" onClick={handleReplay} disabled={replaying}>
-            발표 다시보기 ▶
+        <div className="row" style={{ flexWrap: 'wrap', gap: 8, justifyContent: 'flex-end' }}>
+          <button type="button" className="ghost-btn" onClick={handleExportCsv}>
+            CSV로 내보내기
           </button>
-        )}
+          <button type="button" className="ghost-btn" onClick={handleExportImage} disabled={exportingImage}>
+            {exportingImage ? '이미지 만드는 중...' : '이미지로 저장'}
+          </button>
+          {!readOnly && (
+            <button type="button" className="ghost-btn" onClick={handleReplay} disabled={replaying}>
+              발표 다시보기 ▶
+            </button>
+          )}
+        </div>
       </div>
 
       {overflowStudents.length > 0 && (
@@ -64,7 +95,7 @@ export default function DonePanel({ roomId, captains, students, readOnly }) {
         </div>
       )}
 
-      <div className="result-grid">
+      <div className="result-grid" ref={resultGridRef}>
         {captains.map((captain) => (
           <TeamResultCard
             key={captain.id}

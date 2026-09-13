@@ -116,22 +116,6 @@
   }
 }
 
-.spotlight-card.is-ticking {
-  animation: spotlight-shake 0.11s linear infinite;
-}
-
-@keyframes spotlight-shake {
-  0% {
-    transform: translateX(0) scale(1);
-  }
-  50% {
-    transform: translateX(2px) scale(1.01);
-  }
-  100% {
-    transform: translateX(-2px) scale(1);
-  }
-}
-
 .spotlight-badge {
   font-size: 0.85rem;
   font-weight: 700;
@@ -314,5 +298,101 @@
   to {
     transform: translate(-50%, 0);
     opacity: 1;
+  }
+}
+
+/* ---- 동점자 하이로우 카드 뽑기 미니게임 연출 ---- */
+.card-draw {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.card-draw-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 18px;
+}
+
+.draw-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  perspective: 600px;
+}
+
+.draw-card-inner {
+  position: relative;
+  width: 64px;
+  height: 90px;
+  transform-style: preserve-3d;
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.draw-card.is-flipped .draw-card-inner {
+  transform: rotateY(180deg);
+}
+
+.draw-card-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  backface-visibility: hidden;
+  box-shadow: var(--md-elevation-1);
+}
+
+.draw-card-back {
+  background: var(--md-surface-container-high);
+  border: 2px solid var(--md-outline-variant);
+  font-size: 1.8rem;
+}
+
+.draw-card-front {
+  background: var(--md-surface-container-lowest);
+  border: 2px solid var(--team-color, var(--gold));
+  color: var(--team-color, var(--gold));
+  font-size: 1.9rem;
+  font-weight: 900;
+  transform: rotateY(180deg);
+}
+
+.draw-card-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--muted);
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.draw-card.is-winner .draw-card-inner {
+  animation: draw-card-winner-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.draw-card.is-winner .draw-card-front {
+  box-shadow: 0 0 0 3px var(--team-color, var(--gold)), 0 0 24px -4px var(--team-color, var(--gold));
+}
+
+.draw-card.is-winner .draw-card-name {
+  color: var(--team-color, var(--gold));
+  font-weight: 900;
+}
+
+@keyframes draw-card-winner-pop {
+  0% {
+    transform: rotateY(180deg) scale(1);
+  }
+  50% {
+    transform: rotateY(180deg) scale(1.18);
+  }
+  100% {
+    transform: rotateY(180deg) scale(1);
   }
 }
