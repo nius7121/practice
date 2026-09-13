@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createRoom } from '../services/roomService'
-import { saveTeacherRoom } from '../lib/storage'
+import { saveTeacherRoom, getTeacherRooms } from '../lib/storage'
 import MyRoomsList from '../components/MyRoomsList'
 
 export default function TeacherCreatePage() {
@@ -15,7 +15,17 @@ export default function TeacherCreatePage() {
   const [submitting, setSubmitting] = useState(false)
 
   function validate() {
-    if (!roomName.trim()) return '방 이름을 입력해주세요.'
+    const trimmed = roomName.trim()
+    if (!trimmed) return '방 이름을 입력해주세요.'
+
+    const myRooms = getTeacherRooms()
+    const isDuplicate = myRooms.some(
+      (r) => r.name && r.name.trim().toLowerCase() === trimmed.toLowerCase()
+    )
+    if (isDuplicate) {
+      return `'${trimmed}'(은)는 이미 만든 방(팀) 이름입니다. 다른 이름을 사용해주세요.`
+    }
+
     if (captainCount < 2) return '주장은 최소 2명 이상이어야 합니다.'
     if (coinCount < 1) return '코인 개수는 1개 이상이어야 합니다.'
     if (minTeamSize < 1) return '최소 인원은 1명 이상이어야 합니다.'
@@ -28,6 +38,7 @@ export default function TeacherCreatePage() {
     const validationError = validate()
     if (validationError) {
       setError(validationError)
+      window.alert(validationError)
       return
     }
     setError('')

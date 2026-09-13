@@ -3,7 +3,7 @@ import RevealStage from '../../components/RevealStage'
 import { advanceReveal, setRevealAutoplay, finishReveal } from '../../services/roomService'
 import { primeAudio } from '../../lib/sound'
 
-const AUTOPLAY_INTERVAL_MS = 3200
+const AUTOPLAY_INTERVAL_MS = 3800
 
 export default function RevealPanel({ room, roomId, captains, students, readOnly }) {
   const sequence = room.sequence || []

@@ -4,6 +4,7 @@ import { useRoom, captainsOf, studentsOf } from '../hooks/useRoom'
 import { getTeacherToken, forgetTeacherRoom } from '../lib/storage'
 import { deleteRoom } from '../services/roomService'
 import { buildTeamColorMap } from '../lib/teamColor'
+import { forceStopBgm } from '../lib/bgm'
 import LobbyPanel from './teacher/LobbyPanel'
 import BiddingPanel from './teacher/BiddingPanel'
 import RevealPanel from './teacher/RevealPanel'
@@ -21,6 +22,9 @@ export default function TeacherRoomPage() {
 
   useEffect(() => {
     setConfirmingDelete(false)
+    if (room?.status === 'revealing' || room?.status === 'done') {
+      forceStopBgm()
+    }
   }, [room?.status])
 
   if (loading) {

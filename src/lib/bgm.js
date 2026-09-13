@@ -1,10 +1,9 @@
 // 배경음악(BGM) 재생 제어.
-// 브라우저 자동재생 정책 때문에 반드시 사용자 동작(클릭 등) 이후에 재생을 시작할 수 있다.
-// 발표(reveal) 화면에서는 효과음(lib/sound.js)에 집중할 수 있도록 배경음악을 잠시 꺼둔다.
+// 브라우저 자동재생 정책 및 화면 전환 시 오디오 겹침 방지.
 
 let audioEl = null
-let wantsToPlay = false // 사용자가 배경음악을 켠 상태인지 (아직 재생 못 했더라도)
-let ducked = false // 발표 중이라 잠시 꺼둔 상태인지
+let isStoppedForReveal = false
+let playPromise = null
 
 function getAudio() {
   if (typeof window === 'undefined') return null
@@ -16,37 +15,65 @@ function getAudio() {
   return audioEl
 }
 
-function syncPlayback() {
+/** 첫 사용자 동작(클릭 등) 이후 배경음악을 켠다. 발표 중에는 재생되지 않는다. */
+export function startBgm() {
+  if (isStoppedForReveal) return
   const audio = getAudio()
   if (!audio) return
-  if (wantsToPlay && !ducked) {
-    audio.play().catch(() => {
-      // 아직 사용자 동작이 없어서 자동재생이 막힌 경우: 다음 동작 때 다시 시도된다.
-    })
-  } else {
-    audio.pause()
+
+  try {
+    playPromise = audio.play()
+    if (playPromise !== undefined) {
+      playPromise.catch(() => {
+        // 자동재생 차단 등 처리
+      })
+    }
+  } catch {
+    // ignore
   }
 }
 
-/** 첫 사용자 동작(클릭 등) 이후 배경음악을 켠다. */
-export function startBgm() {
-  wantsToPlay = true
-  syncPlayback()
+/**
+ * 화면 전환 시 기존 오디오 객체를 확실하게 정지(stop/pause 및 시간 초기화)시킨다.
+ */
+export function forceStopBgm() {
+  isStoppedForReveal = true
+  const audio = getAudio()
+  if (!audio) return
+
+  if (playPromise !== undefined && playPromise !== null) {
+    playPromise
+      .then(() => {
+        audio.pause()
+        audio.currentTime = 0
+      })
+      .catch(() => {
+        audio.pause()
+        audio.currentTime = 0
+      })
+      .finally(() => {
+        playPromise = null
+      })
+  } else {
+    try {
+      audio.pause()
+      audio.currentTime = 0
+    } catch {
+      // ignore
+    }
+  }
 }
 
 export function stopBgm() {
-  wantsToPlay = false
-  syncPlayback()
+  forceStopBgm()
 }
 
-/** 발표(reveal) 애니메이션이 나오는 동안 배경음악을 잠시 끈다. */
+/** 발표(reveal) 화면에서는 효과음에 집중할 수 있도록 배경음악을 확실히 끈다. */
 export function duckBgmForReveal() {
-  ducked = true
-  syncPlayback()
+  forceStopBgm()
 }
 
-/** 발표가 끝나면 배경음악을 다시 켠다. */
+/** 발표가 완전히 끝난 후 복구 시 호출 */
 export function restoreBgmAfterReveal() {
-  ducked = false
-  syncPlayback()
+  isStoppedForReveal = false
 }

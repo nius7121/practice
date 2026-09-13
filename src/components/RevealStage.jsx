@@ -1,56 +1,16 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import ConfettiBurst from './ConfettiBurst'
-import { playDrumroll, playFanfare, playReveal, playTick } from '../lib/sound'
+import MarbleRouletteModal from './MarbleRouletteModal'
+import { playDrumroll, playFanfare, playReveal } from '../lib/sound'
 import { duckBgmForReveal, restoreBgmAfterReveal } from '../lib/bgm'
 import './RevealStage.css'
 
 const PICK_HOLD_MS = 1300
-const CARD_FACEDOWN_HOLD_MS = 650
-const CARD_REVEAL_STAGGER_MS = 500
-const CARD_RESULT_HOLD_MS = 1300
-
-/** 문자열을 안정적인 정수로 바꾼다 (동점 카드 숫자를 모든 화면에서 똑같이 만들기 위한 시드용). */
-function hashSeed(str) {
-  let h = 0
-  for (let i = 0; i < str.length; i++) {
-    h = (h * 31 + str.charCodeAt(i)) >>> 0
-  }
-  return h
-}
-
-/**
- * 동점 후보들에게 하이로우 카드 숫자(2~10)를 나눠준다. 이미 정해진 승자가 항상 가장 높은
- * 숫자를 뽑도록 만들어서, "카드 뽑기" 연출과 실제 결과가 절대 어긋나지 않게 한다.
- * 같은 item에 대해 어느 화면에서 계산하든 항상 같은 숫자가 나온다(순수 함수).
- */
-function buildTieCards(item) {
-  const candidates = item.tiedCandidates
-  const values = candidates.map((c) => 2 + (hashSeed(`${item.order}:${c.studentId}:${c.captainId}`) % 9))
-  const winnerIndex = candidates.findIndex(
-    (c) => c.studentId === item.studentId && c.captainId === item.captainId
-  )
-  if (winnerIndex >= 0) {
-    const maxOther = Math.max(0, ...values.filter((_, i) => i !== winnerIndex))
-    values[winnerIndex] = Math.min(13, maxOther + 1)
-  }
-  return candidates.map((c, i) => ({ ...c, cardValue: values[i] }))
-}
+const SUSPENSE_HOLD_MS = 1400
 
 /**
  * 코인 드래프트 발표 애니메이션.
  * 교사 화면(주도)과 학생 화면(관람) 양쪽에서 공유해서 사용한다.
- *
- * @param {Object} props
- * @param {Array} props.sequence - room.sequence
- * @param {number} props.revealIndex - room.revealIndex (여기까지 공개되어야 함)
- * @param {Array} props.captains - {id, name, color}[]
- * @param {Record<string, {id, name}>} props.studentsById
- * @param {boolean} [props.interactive] - true면 "다음 발표" 컨트롤을 보여준다
- * @param {() => void} [props.onAdvance]
- * @param {boolean} [props.autoplay]
- * @param {(v: boolean) => void} [props.onToggleAutoplay]
- * @param {string} [props.myStudentId] - 이 화면을 보는 학생 본인 id (있으면 본인 픽에서 강조)
- * @param {string[]} [props.overflow] - 자동 배정에 실패해 수동 지정이 필요한 학생 id
  */
 export default function RevealStage({
   sequence = [],
@@ -67,6 +27,7 @@ export default function RevealStage({
 }) {
   const [settledCount, setSettledCount] = useState(() => Math.min(revealIndex, sequence.length))
   const [spotlight, setSpotlight] = useState(null)
+  const [activeTieItem, setActiveTieItem] = useState(null)
   const [myBanner, setMyBanner] = useState(null)
   const [confettiTrigger, setConfettiTrigger] = useState(null)
   const processingRef = useRef(false)
@@ -80,6 +41,27 @@ export default function RevealStage({
 
   const total = sequence.length
 
+  const finishItem = useCallback((idx, item) => {
+    setSpotlight(null)
+    setSettledCount(idx + 1)
+    processingRef.current = false
+    if (myStudentId && item.studentId === myStudentId) {
+      setMyBanner(item)
+      setTimeout(() => setMyBanner(null), 3400)
+    }
+  }, [myStudentId])
+
+  const handleMiniGameComplete = useCallback(() => {
+    if (!activeTieItem) return
+    const { idx, item } = activeTieItem
+    setActiveTieItem(null)
+    setSpotlight({ item, phase: 'landed' })
+    playReveal()
+    setTimeout(() => {
+      finishItem(idx, item)
+    }, PICK_HOLD_MS)
+  }, [activeTieItem, finishItem])
+
   useEffect(() => {
     const target = Math.min(revealIndex, total)
     if (processingRef.current || settledCount >= target) return
@@ -89,46 +71,29 @@ export default function RevealStage({
     if (!item) return
     processingRef.current = true
 
-    let timeoutId = null
+    // 1단계: 1.4초간 긴장감(두구두구) 연출
+    setSpotlight({ item, phase: 'suspense' })
+    playDrumroll(1.3)
 
-    const finish = () => {
-      setSpotlight(null)
-      setSettledCount(idx + 1)
-      processingRef.current = false
-      if (myStudentId && item.studentId === myStudentId) {
-        setMyBanner(item)
-        setTimeout(() => setMyBanner(null), 3400)
+    const suspenseTimer = setTimeout(() => {
+      // 동점자인 경우: 결과 바로 공개 금지 -> 마블 룰렛 전용 미니게임 화면으로 전환
+      if (item.tie && item.tiedCandidates?.length > 1) {
+        setSpotlight({ item, phase: 'tie_pending' })
+        setActiveTieItem({ idx, item })
+      } else {
+        // 일반 픽: 바로 결과 착지
+        setSpotlight({ item, phase: 'landed' })
+        playReveal()
+        setTimeout(() => {
+          finishItem(idx, item)
+        }, PICK_HOLD_MS)
       }
-    }
-
-    if (item.tie && item.tiedCandidates?.length > 1) {
-      const cards = buildTieCards(item)
-      setSpotlight({ item, phase: 'cards', cards, revealedCount: 0 })
-      playDrumroll(0.55)
-      timeoutId = setTimeout(function revealNext(revealedCount = 0) {
-        const nextCount = revealedCount + 1
-        playTick()
-        setSpotlight({ item, phase: 'cards', cards, revealedCount: nextCount })
-        if (nextCount < cards.length) {
-          timeoutId = setTimeout(() => revealNext(nextCount), CARD_REVEAL_STAGGER_MS)
-        } else {
-          timeoutId = setTimeout(() => {
-            setSpotlight({ item, phase: 'landed' })
-            playReveal()
-            timeoutId = setTimeout(finish, PICK_HOLD_MS)
-          }, CARD_RESULT_HOLD_MS)
-        }
-      }, CARD_FACEDOWN_HOLD_MS)
-    } else {
-      setSpotlight({ item, phase: 'landed' })
-      playReveal()
-      timeoutId = setTimeout(finish, PICK_HOLD_MS)
-    }
+    }, SUSPENSE_HOLD_MS)
 
     return () => {
-      if (timeoutId) clearTimeout(timeoutId)
+      clearTimeout(suspenseTimer)
     }
-  }, [revealIndex, settledCount, sequence, total, myStudentId])
+  }, [revealIndex, settledCount, sequence, total, finishItem])
 
   useEffect(() => {
     if (total > 0 && settledCount >= total && !doneAnnouncedRef.current) {
@@ -241,6 +206,15 @@ export default function RevealStage({
         </div>
       )}
 
+      {activeTieItem && (
+        <MarbleRouletteModal
+          item={activeTieItem.item}
+          captains={captains}
+          studentsById={studentsById}
+          onComplete={handleMiniGameComplete}
+        />
+      )}
+
       <ConfettiBurst trigger={confettiTrigger} />
     </div>
   )
@@ -248,49 +222,35 @@ export default function RevealStage({
 
 function SpotlightCard({ spotlight, captainById, nameOf }) {
   const { item, phase } = spotlight
-  if (phase === 'cards') {
-    return <TieCardDraw item={item} cards={spotlight.cards} revealedCount={spotlight.revealedCount} captainById={captainById} nameOf={nameOf} />
+
+  if (phase === 'suspense') {
+    return (
+      <div className="spotlight-card is-suspense">
+        <div className="spotlight-badge">두근두근... 🥁</div>
+        <div className="spotlight-drumroll-text">두구두구두구...</div>
+        <div className="spotlight-suspense-spinner">🎲</div>
+      </div>
+    )
   }
+
+  if (phase === 'tie_pending') {
+    return (
+      <div className="spotlight-card is-suspense">
+        <div className="spotlight-badge">⚡ 동점 발생!</div>
+        <div className="spotlight-drumroll-text">마블 룰렛 추첨 중...</div>
+        <div className="spotlight-suspense-spinner">🔮</div>
+      </div>
+    )
+  }
+
   const captain = captainById[item.captainId]
   return (
     <div className="spotlight-card is-landed" style={{ '--team-color': captain?.color }}>
-      {item.tie && <div className="spotlight-badge">🎲 추첨 결과</div>}
+      {item.tie && <div className="spotlight-badge">🎲 마블 룰렛 추첨 결과</div>}
       <div className="spotlight-name">{nameOf(item.studentId)}</div>
       <div className="spotlight-arrow">→</div>
       <div className="spotlight-team">{captain?.teamName || `${captain?.name} 팀`}</div>
       <div className="spotlight-amount">{item.amount} 코인</div>
-    </div>
-  )
-}
-
-/** 동점자들이 하이로우 카드를 한 장씩 뒤집어서, 더 높은 숫자가 나온 학생이 뽑히는 미니게임 연출. */
-function TieCardDraw({ item, cards, revealedCount, captainById, nameOf }) {
-  const allRevealed = revealedCount >= cards.length
-
-  return (
-    <div className="card-draw">
-      <div className="spotlight-badge">🃏 동점! 하이로우 카드 뽑기</div>
-      <div className="card-draw-row">
-        {cards.map((c, i) => {
-          const captain = captainById[c.captainId]
-          const isFlipped = i < revealedCount
-          const isWinner =
-            allRevealed && c.studentId === item.studentId && c.captainId === item.captainId
-          return (
-            <div
-              key={`${c.studentId}-${c.captainId}`}
-              className={`draw-card ${isFlipped ? 'is-flipped' : ''} ${isWinner ? 'is-winner' : ''}`}
-              style={{ '--team-color': captain?.color }}
-            >
-              <div className="draw-card-inner">
-                <div className="draw-card-face draw-card-back">🂠</div>
-                <div className="draw-card-face draw-card-front">{c.cardValue}</div>
-              </div>
-              <div className="draw-card-name">{nameOf(c.studentId)}</div>
-            </div>
-          )
-        })}
-      </div>
     </div>
   )
 }

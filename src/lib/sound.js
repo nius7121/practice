@@ -72,6 +72,17 @@ export function playFanfare() {
   )
 }
 
+/** 코인이 획득/투표될 때 나는 경쾌한 '띠링' 효과음 */
+export function playCoinDing() {
+  tone(1046.5, 0.22, { type: 'sine', gain: 0.18 })
+  tone(1567.98, 0.35, { delay: 0.07, type: 'sine', gain: 0.22 })
+}
+
+/** 구슬 룰렛이 굴러가는 동안의 구슬 구르는 효과음 */
+export function playMarbleRoll() {
+  tone(450 + Math.random() * 80, 0.03, { type: 'triangle', gain: 0.05 })
+}
+
 /** 최초 사용자 동작 시 오디오 컨텍스트를 깨워둔다. */
 export function primeAudio() {
   getCtx()

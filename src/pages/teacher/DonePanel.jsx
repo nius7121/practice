@@ -114,6 +114,20 @@ export default function DonePanel({ roomId, roomName, captains, students, readOn
 function TeamResultCard({ roomId, captain, members, allCaptains, readOnly }) {
   const [name, setName] = useState(captain.teamName || `${captain.name} 팀`)
 
+  function handleSaveName() {
+    const trimmed = name.trim()
+    if (!trimmed) return
+    const isDuplicate = allCaptains.some(
+      (c) => c.id !== captain.id && (c.teamName || `${c.name} 팀`).trim().toLowerCase() === trimmed.toLowerCase()
+    )
+    if (isDuplicate) {
+      window.alert(`'${trimmed}'(은)는 이미 존재하는 다른 팀의 이름입니다. 중복되지 않는 이름을 사용해주세요.`)
+      setName(captain.teamName || `${captain.name} 팀`)
+      return
+    }
+    setTeamName(roomId, captain.id, trimmed)
+  }
+
   return (
     <div className="result-team-card" style={{ '--team-color': captain.color }}>
       <div className="result-team-head">
@@ -123,7 +137,7 @@ function TeamResultCard({ roomId, captain, members, allCaptains, readOnly }) {
           value={name}
           disabled={readOnly}
           onChange={(e) => setName(e.target.value)}
-          onBlur={() => name.trim() && setTeamName(roomId, captain.id, name.trim())}
+          onBlur={handleSaveName}
         />
         <span className="participant-tag">{members.length + 1}명</span>
       </div>

@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { backToLobby, lockAndComputeResults } from '../../services/roomService'
 import { playClick, primeAudio } from '../../lib/sound'
-import TeamCoinGauge from '../../components/TeamCoinGauge'
+import { forceStopBgm } from '../../lib/bgm'
+import LiveCoinBoard from '../../components/LiveCoinBoard'
 
 export default function BiddingPanel({ roomId, captains, students, readOnly }) {
   const [locking, setLocking] = useState(false)
@@ -16,6 +17,7 @@ export default function BiddingPanel({ roomId, captains, students, readOnly }) {
       )
       if (!ok) return
     }
+    forceStopBgm()
     primeAudio()
     playClick()
     setLocking(true)
@@ -34,7 +36,7 @@ export default function BiddingPanel({ roomId, captains, students, readOnly }) {
         <p className="page-subtitle">
           누가 누구에게 코인을 걸었는지는 아무에게도 보이지 않아요. 발표 순간까지 비밀이에요! 🤫
         </p>
-        <TeamCoinGauge captains={captains} students={students} />
+        <LiveCoinBoard students={students} />
         <ul className="participant-list">
           {students.map((s) => (
             <li className="participant-row" key={s.id}>

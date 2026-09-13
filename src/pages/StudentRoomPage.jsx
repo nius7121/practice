@@ -1,13 +1,14 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useRoom, captainsOf, studentsOf } from '../hooks/useRoom'
 import { getStudentSession, saveStudentSession, clearStudentSession } from '../lib/storage'
 import { joinRoom, submitBids } from '../services/roomService'
 import { buildTeamColorMap } from '../lib/teamColor'
+import { forceStopBgm } from '../lib/bgm'
 import CoinAllocator from '../components/CoinAllocator'
 import RevealStage from '../components/RevealStage'
 import TeamResultsView from '../components/TeamResultsView'
-import TeamCoinGauge from '../components/TeamCoinGauge'
+import LiveCoinBoard from '../components/LiveCoinBoard'
 import { primeAudio } from '../lib/sound'
 import './StudentRoomPage.css'
 
@@ -15,6 +16,12 @@ export default function StudentRoomPage() {
   const { roomId } = useParams()
   const { room, loading } = useRoom(roomId)
   const [session, setSession] = useState(() => getStudentSession(roomId))
+
+  useEffect(() => {
+    if (room?.status === 'revealing' || room?.status === 'done') {
+      forceStopBgm()
+    }
+  }, [room?.status])
 
   if (loading) {
     return <div className="center-loading">불러오는 중...</div>
@@ -91,7 +98,7 @@ export default function StudentRoomPage() {
             <div style={{ fontSize: '2.4rem' }}>👑</div>
             <p>지금 다른 학생들이 당신에게 코인을 걸고 있어요.</p>
             <p className="page-subtitle">누가 얼마나 걸었는지는 발표 시간에 공개돼요. 기대해주세요!</p>
-            <TeamCoinGauge captains={captainsWithColor} students={students} />
+            <LiveCoinBoard students={students} />
           </div>
         ) : (
           <BiddingForm
@@ -144,7 +151,9 @@ function NameEntry({ roomId, roomName, onJoined }) {
       saveStudentSession(roomId, session)
       onJoined(session)
     } catch (err) {
-      setError(err.message || '입장하지 못했어요. 다시 시도해주세요.')
+      const msg = err.message || '입장하지 못했어요. 다시 시도해주세요.'
+      setError(msg)
+      window.alert(msg)
       setJoining(false)
     }
   }

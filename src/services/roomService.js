@@ -69,10 +69,19 @@ export async function joinRoom(roomId, name) {
   const room = await getRoomOnce(roomId)
   if (!room) throw new Error('존재하지 않는 입장 코드입니다.')
 
+  const trimmed = name.trim()
+  const existingMembers = Object.values(room.members || {})
+  const isDuplicate = existingMembers.some(
+    (m) => m.name && m.name.trim().toLowerCase() === trimmed.toLowerCase()
+  )
+  if (isDuplicate) {
+    throw new Error(`'${trimmed}'(은)는 이미 방에 있는 이름입니다. 다른 이름이나 번호를 붙여 입력해주세요 (예: ${trimmed}2).`)
+  }
+
   const memberRef = push(ref(db, `rooms/${roomId}/members`))
   const studentId = memberRef.key
   await set(memberRef, {
-    name: name.trim(),
+    name: trimmed,
     joinedAt: Date.now(),
     isCaptain: false,
     bids: null,

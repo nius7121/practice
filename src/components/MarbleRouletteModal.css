@@ -1,0 +1,196 @@
+.marble-roulette-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(10, 14, 26, 0.9);
+  backdrop-filter: blur(16px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: mr-fade-in 0.3s ease-out;
+}
+
+@keyframes mr-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.marble-roulette-container {
+  background: var(--md-surface-container-high, #1e2333);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(255, 215, 0, 0.12);
+  border-radius: 24px;
+  max-width: 580px;
+  width: 100%;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.mr-badge {
+  background: linear-gradient(135deg, #ff416c, #ff4b2b);
+  color: white;
+  font-weight: 800;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  padding: 6px 16px;
+  border-radius: 999px;
+  box-shadow: 0 4px 14px rgba(255, 75, 43, 0.4);
+  animation: mr-pulse 1.6s infinite;
+}
+
+@keyframes mr-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.mr-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.mr-subtitle {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--muted, #94a3b8);
+}
+
+.mr-candidates-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  max-width: 95%;
+}
+
+.mr-candidate-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #f8fafc;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.mr-candidate-chip.is-winner-chip {
+  background: var(--c-color);
+  color: #000;
+  font-weight: 900;
+  transform: scale(1.1);
+  box-shadow: 0 0 20px var(--c-color);
+}
+
+.mr-marble-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff 0%, var(--c-color) 60%, #000 100%);
+  box-shadow: 0 0 8px var(--c-color);
+}
+
+.mr-roulette-wrapper {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  margin: 8px 0;
+}
+
+.mr-wheel-canvas {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.7), inset 0 0 20px rgba(0, 0, 0, 0.8);
+}
+
+.mr-center-cap {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff 0%, #d4af37 40%, #8a6c17 100%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  pointer-events: none;
+}
+
+.mr-pointer {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 14px solid transparent;
+  border-right: 14px solid transparent;
+  border-top: 24px solid #ff3366;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6));
+  z-index: 10;
+}
+
+.mr-result-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  animation: mr-bounce-up 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes mr-bounce-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.mr-result-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #ffd700;
+  text-shadow: 0 0 16px rgba(255, 215, 0, 0.6);
+}
+
+.mr-return-btn {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #fff;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.4);
+  transition: transform 0.15s;
+}
+
+.mr-return-btn:hover {
+  transform: scale(1.04);
+}
