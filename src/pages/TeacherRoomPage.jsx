@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useRoom, captainsOf, studentsOf } from '../hooks/useRoom'
-import { getTeacherToken } from '../lib/storage'
+import { getTeacherToken, forgetTeacherRoom } from '../lib/storage'
 import { deleteRoom } from '../services/roomService'
 import { buildTeamColorMap } from '../lib/teamColor'
 import LobbyPanel from './teacher/LobbyPanel'
@@ -53,6 +53,7 @@ export default function TeacherRoomPage() {
 
   async function handleDelete() {
     await deleteRoom(roomId)
+    forgetTeacherRoom(roomId)
     navigate('/')
   }
 

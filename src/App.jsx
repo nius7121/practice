@@ -6,6 +6,7 @@ import JoinPage from './pages/JoinPage'
 import StudentRoomPage from './pages/StudentRoomPage'
 import GuidePage from './pages/GuidePage'
 import NotFoundPage from './pages/NotFoundPage'
+import ldLogo from './assets/ld-logo.png'
 import './App.css'
 
 function Chrome({ children }) {
@@ -13,10 +14,13 @@ function Chrome({ children }) {
     <div className="app-shell">
       <header className="app-header">
         <Link to="/" className="app-brand">
-          🏁 라이브 드래프트
+          <img src={ldLogo} alt="" className="app-brand-logo" />
+          Live Draft
         </Link>
         <nav className="app-nav">
-          <Link to="/guide">사용법</Link>
+          <Link to="/guide" className="app-nav-btn">
+            사용법
+          </Link>
         </nav>
       </header>
       <main className="app-main">{children}</main>

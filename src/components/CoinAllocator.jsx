@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import './CoinAllocator.css'
 
 /**
@@ -15,6 +15,7 @@ export default function CoinAllocator({ captains, coinCount, initialBids, onSubm
     })
     return base
   })
+  const trackRefs = useRef({})
 
   const used = useMemo(() => Object.values(bids).reduce((a, b) => a + b, 0), [bids])
   const remaining = coinCount - used
@@ -25,6 +26,56 @@ export default function CoinAllocator({ captains, coinCount, initialBids, onSubm
       if (delta > 0 && remaining <= 0) return prev
       return { ...prev, [captainId]: next }
     })
+  }
+
+  /** 드래그/키보드 조작으로 특정 값을 바로 지정한다. 다른 주장에게 이미 건 코인은 건드리지 않는다. */
+  function setValue(captainId, rawValue) {
+    setBids((prev) => {
+      const otherUsed = Object.entries(prev).reduce(
+        (sum, [id, v]) => (id === captainId ? sum : sum + v),
+        0
+      )
+      const maxAllowed = Math.max(0, coinCount - otherUsed)
+      const next = Math.max(0, Math.min(maxAllowed, Math.round(rawValue)))
+      if (next === prev[captainId]) return prev
+      return { ...prev, [captainId]: next }
+    })
+  }
+
+  function updateFromPointer(captainId, clientX) {
+    const track = trackRefs.current[captainId]
+    if (!track || !coinCount) return
+    const rect = track.getBoundingClientRect()
+    const ratio = rect.width === 0 ? 0 : (clientX - rect.left) / rect.width
+    setValue(captainId, ratio * coinCount)
+  }
+
+  function handlePointerDown(captainId, e) {
+    if (submitting) return
+    e.currentTarget.setPointerCapture?.(e.pointerId)
+    updateFromPointer(captainId, e.clientX)
+  }
+
+  function handlePointerMove(captainId, e) {
+    if (submitting || e.buttons === 0) return
+    updateFromPointer(captainId, e.clientX)
+  }
+
+  function handleTrackKeyDown(captainId, e) {
+    if (submitting) return
+    if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+      e.preventDefault()
+      change(captainId, 1)
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+      e.preventDefault()
+      change(captainId, -1)
+    } else if (e.key === 'Home') {
+      e.preventDefault()
+      setValue(captainId, 0)
+    } else if (e.key === 'End') {
+      e.preventDefault()
+      setValue(captainId, coinCount)
+    }
   }
 
   function reset() {
@@ -70,11 +121,28 @@ export default function CoinAllocator({ captains, coinCount, initialBids, onSubm
                 +
               </button>
             </div>
-            <div className="coin-bar-track">
+            <div
+              className="coin-bar-track"
+              ref={(el) => {
+                trackRefs.current[captain.id] = el
+              }}
+              onPointerDown={(e) => handlePointerDown(captain.id, e)}
+              onPointerMove={(e) => handlePointerMove(captain.id, e)}
+              onKeyDown={(e) => handleTrackKeyDown(captain.id, e)}
+              role="slider"
+              aria-label={`${captain.name}에게 건 코인`}
+              aria-valuemin={0}
+              aria-valuemax={coinCount}
+              aria-valuenow={bids[captain.id]}
+              aria-disabled={submitting}
+              tabIndex={submitting ? -1 : 0}
+            >
               <div
                 className="coin-bar-fill"
                 style={{ width: coinCount ? `${(bids[captain.id] / coinCount) * 100}%` : '0%' }}
-              />
+              >
+                <span className="coin-bar-thumb" />
+              </div>
             </div>
           </div>
         ))}

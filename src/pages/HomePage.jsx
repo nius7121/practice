@@ -8,7 +8,7 @@ export default function HomePage() {
         <h1 className="home-title">
           코인으로 팀을 뽑는
           <br />
-          라이브 드래프트
+          Live Draft
         </h1>
         <p className="page-subtitle">
           학생들이 가진 코인을 주장에게 나눠 걸면, 가장 높은 코인을 건 학생부터 순서대로 팀이

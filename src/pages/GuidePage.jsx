@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import './GuidePage.css'
 
 const STEPS = [
@@ -107,12 +109,38 @@ const STEPS = [
 ]
 
 export default function GuidePage() {
+  const navigate = useNavigate()
+
+  function handleClose() {
+    if (window.history.length > 1) {
+      navigate(-1)
+    } else {
+      navigate('/')
+    }
+  }
+
+  useEffect(() => {
+    function onKeyDown(e) {
+      if (e.key === 'Escape') handleClose()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   return (
     <div className="page wide">
-      <h1 className="page-title">사용 방법</h1>
-      <p className="page-subtitle">
-        방 만들기부터 발표까지 실제 화면 구성을 그대로 축소해서 단계별로 모았습니다.
-      </p>
+      <div className="guide-page-bar">
+        <button type="button" className="icon-btn" onClick={handleClose} aria-label="사용법 닫기">
+          ✕
+        </button>
+        <div>
+          <h1 className="page-title">사용 방법</h1>
+          <p className="page-subtitle">
+            방 만들기부터 발표까지 실제 화면 구성을 그대로 축소해서 단계별로 모았습니다.
+          </p>
+        </div>
+      </div>
 
       <div className="guide-timeline">
         {STEPS.map((step, i) => (

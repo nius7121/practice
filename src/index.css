@@ -1,16 +1,72 @@
-@import url('https://fonts.googleapis.com/css2?family=Gowun+Batang&family=Jua&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
 
 :root {
-  color-scheme: dark;
-  --bg: #0b0f22;
-  --bg-soft: #131834;
-  --text: #f4f5fb;
-  --muted: #9aa0c3;
-  --gold: #ffd23f;
-  --green: #3ddc97;
-  --red: #ff5d73;
-  --border: rgba(255, 255, 255, 0.1);
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Malgun Gothic', system-ui, sans-serif;
+  color-scheme: light;
+
+  /* ---- Material Design 3 tonal palette (파비콘과 맞춘 차분한 블루 seed) ---- */
+  --md-primary: #3b5da6;
+  --md-on-primary: #ffffff;
+  --md-primary-container: #dbe6ff;
+  --md-on-primary-container: #0d2c63;
+
+  --md-secondary: #59617a;
+  --md-on-secondary: #ffffff;
+  --md-secondary-container: #dde3f7;
+  --md-on-secondary-container: #171d33;
+
+  --md-tertiary: #2e6b46;
+  --md-on-tertiary: #ffffff;
+  --md-tertiary-container: #b3f1c2;
+  --md-on-tertiary-container: #002110;
+
+  --md-error: #ba1a1a;
+  --md-on-error: #ffffff;
+  --md-error-container: #ffdad6;
+  --md-on-error-container: #410002;
+
+  --md-surface: #f8f9fc;
+  --md-surface-dim: #d9dce6;
+  --md-surface-bright: #f8f9fc;
+  --md-surface-container-lowest: #ffffff;
+  --md-surface-container-low: #f2f4f9;
+  --md-surface-container: #eceff5;
+  --md-surface-container-high: #e6e9f1;
+  --md-surface-container-highest: #e0e3ec;
+  --md-on-surface: #1b1c22;
+  --md-on-surface-variant: #45474f;
+  --md-outline: #767781;
+  --md-outline-variant: #c6c7d1;
+  --md-scrim: #000000;
+
+  /* ---- Elevation shadows ---- */
+  --md-elevation-1: 0 1px 2px rgba(27, 28, 34, 0.24), 0 1px 3px 1px rgba(27, 28, 34, 0.1);
+  --md-elevation-2: 0 1px 2px rgba(27, 28, 34, 0.24), 0 3px 6px 2px rgba(27, 28, 34, 0.1);
+  --md-elevation-3: 0 1px 3px rgba(27, 28, 34, 0.28), 0 6px 12px 3px rgba(27, 28, 34, 0.12);
+
+  /* ---- Shape scale ---- */
+  --shape-xs: 4px;
+  --shape-sm: 8px;
+  --shape-md: 12px;
+  --shape-lg: 16px;
+  --shape-xl: 28px;
+  --shape-full: 999px;
+
+  /* ---- Motion ---- */
+  --motion-standard: cubic-bezier(0.2, 0, 0, 1);
+  --motion-emphasized: cubic-bezier(0.3, 0, 0.1, 1);
+
+  /* ---- Legacy aliases used across the app ---- */
+  --bg: var(--md-surface);
+  --bg-soft: var(--md-surface-container);
+  --text: var(--md-on-surface);
+  --muted: var(--md-on-surface-variant);
+  --gold: var(--md-primary);
+  --green: var(--md-tertiary);
+  --red: var(--md-error);
+  --border: var(--md-outline-variant);
+
+  font-family: 'Noto Sans KR', 'Roboto', -apple-system, BlinkMacSystemFont, 'Malgun Gothic', system-ui,
+    sans-serif;
 }
 
 * {
@@ -25,7 +81,7 @@ body,
 
 body {
   margin: 0;
-  background: radial-gradient(circle at 20% -10%, #1c2452 0%, var(--bg) 55%);
+  background: var(--md-surface-container-low);
   color: var(--text);
 }
 
@@ -39,80 +95,157 @@ textarea {
   font-family: inherit;
 }
 
-.primary-btn {
-  background: linear-gradient(180deg, #ffe27a, var(--gold));
-  color: #241a00;
-  border: none;
-  padding: 13px 26px;
-  border-radius: 12px;
-  font-weight: 800;
-  font-size: 1rem;
+:focus-visible {
+  outline: 3px solid var(--md-primary);
+  outline-offset: 2px;
+}
+
+/* ---- Buttons (Material 3: filled / outlined-tonal / error) ---- */
+.primary-btn,
+.ghost-btn,
+.danger-btn {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  font-weight: 700;
+  font-size: 0.98rem;
   cursor: pointer;
-  transition: transform 0.12s ease, box-shadow 0.2s ease;
-  box-shadow: 0 8px 20px -8px rgba(255, 210, 63, 0.6);
+  border-radius: var(--shape-full);
+  transition:
+    box-shadow 0.2s var(--motion-standard),
+    transform 0.15s var(--motion-standard),
+    background-color 0.2s var(--motion-standard),
+    filter 0.2s var(--motion-standard);
+}
+
+/* center-expanding "ripple" emphasis effect on press, no JS required */
+.primary-btn::after,
+.ghost-btn::after,
+.danger-btn::after,
+.home-card::after,
+.room-code-badge::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle, currentColor 0%, currentColor 60%, transparent 61%) center / 1% 1%
+    no-repeat;
+  opacity: 0;
+  pointer-events: none;
+  transition: background-size 0.55s var(--motion-emphasized), opacity 0.7s ease-out;
+  z-index: -1;
+}
+
+.primary-btn:active::after,
+.ghost-btn:active::after,
+.danger-btn:active::after,
+.home-card:active::after,
+.room-code-badge:active::after {
+  background-size: 300% 300%;
+  opacity: 0.16;
+  transition: background-size 0s, opacity 0s;
+}
+
+.primary-btn {
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+  border: none;
+  padding: 14px 28px;
+  box-shadow: var(--md-elevation-1);
 }
 
 .primary-btn:hover:not(:disabled) {
+  box-shadow: var(--md-elevation-2);
+  filter: brightness(1.06);
   transform: translateY(-1px);
 }
 
 .primary-btn:active:not(:disabled) {
+  box-shadow: var(--md-elevation-1);
   transform: translateY(0);
 }
 
 .primary-btn:disabled {
-  opacity: 0.4;
+  opacity: 0.38;
   cursor: not-allowed;
   box-shadow: none;
 }
 
 .ghost-btn {
-  background: transparent;
-  color: var(--text);
-  border: 1px solid var(--border);
-  padding: 12px 22px;
-  border-radius: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.2s ease;
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+  border: none;
+  padding: 12px 24px;
 }
 
 .ghost-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.06);
+  box-shadow: var(--md-elevation-1);
+  filter: brightness(1.04);
 }
 
 .ghost-btn:disabled {
-  opacity: 0.4;
+  opacity: 0.38;
   cursor: not-allowed;
 }
 
 .danger-btn {
-  background: rgba(255, 93, 115, 0.14);
-  color: var(--red);
-  border: 1px solid rgba(255, 93, 115, 0.4);
-  padding: 10px 18px;
-  border-radius: 12px;
-  font-weight: 700;
-  cursor: pointer;
+  background: var(--md-error-container);
+  color: var(--md-on-error-container);
+  border: none;
+  padding: 11px 20px;
 }
 
 .danger-btn:hover:not(:disabled) {
-  background: rgba(255, 93, 115, 0.24);
+  box-shadow: var(--md-elevation-1);
+  filter: brightness(1.03);
+}
+
+/* icon buttons (used for close / X actions) */
+.icon-btn {
+  position: relative;
+  overflow: hidden;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--shape-full);
+  border: none;
+  background: transparent;
+  color: var(--md-on-surface-variant);
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.18s var(--motion-standard);
+}
+
+.icon-btn:hover {
+  background: var(--md-surface-container-highest);
+}
+
+.icon-btn:active {
+  background: var(--md-secondary-container);
 }
 
 .text-input {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  background: var(--md-surface-container-lowest);
+  border: 1px solid var(--md-outline);
+  border-radius: var(--shape-sm);
   padding: 13px 16px;
   color: var(--text);
   font-size: 1rem;
   width: 100%;
+  transition: border-color 0.15s var(--motion-standard), box-shadow 0.15s var(--motion-standard);
+}
+
+.text-input:hover {
+  border-color: var(--md-on-surface);
 }
 
 .text-input:focus {
-  outline: 2px solid var(--gold);
-  outline-offset: 1px;
+  outline: none;
+  border-color: var(--md-primary);
+  box-shadow: 0 0 0 1px var(--md-primary);
 }
 
 .field-label {

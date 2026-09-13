@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createRoom } from '../services/roomService'
-import { saveTeacherToken } from '../lib/storage'
+import { saveTeacherRoom } from '../lib/storage'
+import MyRoomsList from '../components/MyRoomsList'
 
 export default function TeacherCreatePage() {
   const navigate = useNavigate()
@@ -39,7 +40,7 @@ export default function TeacherCreatePage() {
         minTeamSize: Number(minTeamSize),
         maxTeamSize: Number(maxTeamSize),
       })
-      saveTeacherToken(roomId, teacherToken)
+      saveTeacherRoom(roomId, { token: teacherToken, name: roomName.trim() })
       navigate(`/teacher/${roomId}`)
     } catch (err) {
       setError(err.message || '방을 만들지 못했습니다. 다시 시도해주세요.')
@@ -53,6 +54,8 @@ export default function TeacherCreatePage() {
       <p className="page-subtitle">
         설정은 방을 만든 뒤 학생들이 입장하는 대기실 단계에서도 언제든 바꿀 수 있어요.
       </p>
+
+      <MyRoomsList />
 
       <form className="card stack" onSubmit={handleSubmit}>
         <div className="field">

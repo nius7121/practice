@@ -157,9 +157,9 @@ export async function advanceReveal(roomId) {
     const total = (room.sequence || []).length
     const next = Math.min((room.revealIndex || 0) + 1, total)
     room.revealIndex = next
-    if (next >= total) {
-      room.status = 'done'
-    }
+    // status는 여기서 바로 'done'으로 바꾸지 않는다. 마지막 학생의 발표 애니메이션이 채 끝나기도
+    // 전에 화면이 결과 화면으로 바뀌어버리기 때문 — 애니메이션이 다 끝난 뒤 finishReveal()이
+    // 명시적으로 호출됐을 때만 'done'으로 넘어간다.
     return room
   })
 }
@@ -168,8 +168,16 @@ export async function setRevealAutoplay(roomId, autoplay) {
   await update(ref(db, `rooms/${roomId}`), { revealAutoplay: autoplay })
 }
 
+/** 발표가 실제로 끝까지 진행된 뒤에만 'done'으로 넘어가도록 서버 쪽에서도 한 번 더 확인한다. */
 export async function finishReveal(roomId) {
-  await update(ref(db, `rooms/${roomId}`), { status: 'done' })
+  const roomRef = ref(db, `rooms/${roomId}`)
+  await runTransaction(roomRef, (room) => {
+    if (!room) return room
+    const total = (room.sequence || []).length
+    if ((room.revealIndex || 0) < total) return room
+    room.status = 'done'
+    return room
+  })
 }
 
 /** 교사가 결과 발표 후 수동으로 팀을 조정한다. */

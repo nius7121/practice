@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import RevealStage from '../../components/RevealStage'
-import { advanceReveal, setRevealAutoplay } from '../../services/roomService'
+import { advanceReveal, setRevealAutoplay, finishReveal } from '../../services/roomService'
 import { primeAudio } from '../../lib/sound'
 
 const AUTOPLAY_INTERVAL_MS = 3200
@@ -34,6 +34,7 @@ export default function RevealPanel({ room, roomId, captains, students, readOnly
         }}
         autoplay={room.revealAutoplay}
         onToggleAutoplay={(v) => setRevealAutoplay(roomId, v)}
+        onFinish={() => finishReveal(roomId)}
         overflow={room.overflow || []}
       />
     </div>

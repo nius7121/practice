@@ -33,6 +33,7 @@ export default function RevealStage({
   onAdvance,
   autoplay = false,
   onToggleAutoplay,
+  onFinish,
   myStudentId,
   overflow = [],
 }) {
@@ -115,7 +116,8 @@ export default function RevealStage({
   const captainById = Object.fromEntries(captains.map((c) => [c.id, c]))
   const nameOf = (id) => studentsById[id]?.name ?? '???'
 
-  const canAdvance = interactive && !autoplay && settledCount >= Math.min(revealIndex, total) && settledCount < total
+  const allRevealed = total > 0 && settledCount >= total
+  const canAdvance = interactive && !autoplay && settledCount >= Math.min(revealIndex, total) && !allRevealed
 
   return (
     <div className="reveal-stage">
@@ -128,7 +130,16 @@ export default function RevealStage({
 
       <div className="reveal-spotlight">
         {spotlight ? (
-          <SpotlightCard spotlight={spotlight} captainById={captainById} nameOf={nameOf} />
+          <>
+            {spotlight.phase === 'landed' && (
+              <div
+                key={`flash-${spotlight.item.studentId}`}
+                className="reveal-flash"
+                style={{ '--team-color': captainById[spotlight.item.captainId]?.color }}
+              />
+            )}
+            <SpotlightCard spotlight={spotlight} captainById={captainById} nameOf={nameOf} />
+          </>
         ) : settledCount === 0 ? (
           <div className="spotlight-idle">두근두근... 발표를 시작해주세요!</div>
         ) : (
@@ -167,15 +178,21 @@ export default function RevealStage({
 
       {interactive && (
         <div className="reveal-controls">
-          <button type="button" className="primary-btn" onClick={onAdvance} disabled={!canAdvance}>
-            {settledCount >= total ? '발표 완료' : '다음 발표 ▶'}
-          </button>
+          {allRevealed ? (
+            <button type="button" className="primary-btn is-finish" onClick={onFinish}>
+              결과 확인하기 🎉
+            </button>
+          ) : (
+            <button type="button" className="primary-btn" onClick={onAdvance} disabled={!canAdvance}>
+              다음 발표 ▶
+            </button>
+          )}
           <label className="reveal-autoplay">
             <input
               type="checkbox"
               checked={autoplay}
               onChange={(e) => onToggleAutoplay?.(e.target.checked)}
-              disabled={settledCount >= total}
+              disabled={allRevealed}
             />
             자동으로 이어서 발표하기
           </label>
