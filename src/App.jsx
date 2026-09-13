@@ -1,4 +1,6 @@
+import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
+import { startBgm } from './lib/bgm'
 import HomePage from './pages/HomePage'
 import TeacherCreatePage from './pages/TeacherCreatePage'
 import TeacherRoomPage from './pages/TeacherRoomPage'
@@ -29,6 +31,16 @@ function Chrome({ children }) {
 }
 
 export default function App() {
+  // 브라우저 자동재생 정책 때문에, 앱 안 어디든 첫 클릭/터치가 있을 때 배경음악을 시작한다.
+  useEffect(() => {
+    function unlock() {
+      startBgm()
+      window.removeEventListener('pointerdown', unlock)
+    }
+    window.addEventListener('pointerdown', unlock)
+    return () => window.removeEventListener('pointerdown', unlock)
+  }, [])
+
   return (
     <BrowserRouter>
       <Chrome>

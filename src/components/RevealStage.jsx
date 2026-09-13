@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import ConfettiBurst from './ConfettiBurst'
 import { playDrumroll, playFanfare, playReveal, playTick } from '../lib/sound'
+import { duckBgmForReveal, restoreBgmAfterReveal } from '../lib/bgm'
 import './RevealStage.css'
 
 const TICK_COUNT = 14
@@ -43,6 +44,12 @@ export default function RevealStage({
   const [confettiTrigger, setConfettiTrigger] = useState(null)
   const processingRef = useRef(false)
   const doneAnnouncedRef = useRef(false)
+
+  // 발표 화면이 떠 있는 동안은 배경음악을 잠시 끄고 효과음에 집중하게 한다.
+  useEffect(() => {
+    duckBgmForReveal()
+    return () => restoreBgmAfterReveal()
+  }, [])
 
   const total = sequence.length
 
